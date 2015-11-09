@@ -16,6 +16,7 @@
     "mongoose": "^4.2.4",
     "node-babel": "^0.1.2",
     "rx": "^4.0.6",
-    "uuid": "^2.0.1"
+    "uuid": "^2.0.1",
+    "whirlpool": "https://github.com/davidturissini/whirlpool.git"
   }
 }
