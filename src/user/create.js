@@ -44,7 +44,7 @@ module.exports = function (req) {
     // Save user
     .flatMapLatest((params) => {
         return rx.Observable.create(function (o) {
-            const user = users.add(params);
+            const user = users.create(params);
 
             o.onNext(user);
         });

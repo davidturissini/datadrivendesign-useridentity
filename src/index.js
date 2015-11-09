@@ -1,17 +1,24 @@
 'use strict';
 
-require('node-babel')();
+const server = require('data-driven-design-server-bootstrap');
 
 
-const serverPort = require('./server/port');
-const serverStart = require('./server/server');
-const serverResponse = require('./server/response');
-
-serverStart.combineLatest(serverPort, function (app, port) {
-    return ({ app: app, port: port });
-}).subscribe((data) => {
-    console.log(`App listening on port ${data.port}`);
+server(4100, [{
+    "method": "post",
+    "path": "/users",
+    "handler": "./src/user/create"
+},{
+    "method": "get",
+    "path": "/users/:id",
+    "handler": "./src/user/get"
+},{
+    "method": "post",
+    "path": "/userSession",
+    "handler": "./src/userSession/create"
+},{
+    "method": "delete",
+    "path": "/userSession",
+    "handler": "./src/userSession/delete"
+}], {
+    cwd: __dirname + '/../'
 });
-
-
-serverStart.connect();
