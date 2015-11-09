@@ -3,7 +3,7 @@
 const server = require('data-driven-design-server-bootstrap');
 
 
-server(4100, [{
+server(process.env.PORT || 4100;, [{
     "method": "post",
     "path": "/users",
     "handler": "./src/user/create"
