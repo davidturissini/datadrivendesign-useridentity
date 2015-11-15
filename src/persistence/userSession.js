@@ -1,5 +1,7 @@
 'use strict';
 
+const users = require('./users');
+
 const uuid = require('uuid');
 const sessions = {
     '362edc3a-b39a-4250-ac59-9370d5b6511d': {
@@ -11,7 +13,7 @@ const sessions = {
 module.exports = {
 
     create: function (user) {
-        const sessionId = uuid();
+        const sessionId = '362edc3a-b39a-4250-ac59-9370d5b6511d';
         const session = {
             user_id: user.id,
             id: sessionId
@@ -28,6 +30,12 @@ module.exports = {
 
     remove: function (id) {
         delete sessions[id];
+    },
+
+    findUserBySessionId (sessionId) {
+        const session = this.get(sessionId);
+
+        return users.get(session.user_id);
     }
 
 }

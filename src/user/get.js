@@ -7,6 +7,8 @@ const _ = require('lodash');
 
 module.exports = function (req) {
 
+
+    // verify that we have an x-auth-token
     return rx.Observable.create(function (o) {
         const tokenString = req.headers['x-auth-token'];
 
@@ -14,17 +16,29 @@ module.exports = function (req) {
             throw new Error('Token missing');
         }
 
+        
         const session = userSessions.get(tokenString);
 
-        o.onNext(session); 
+        if (!session) {
+            throw new Error('Invalid token');
+        }
+
+        o.onNext({
+            session: session,
+            req: req
+        }); 
 
     })
 
-    .flatMapLatest((session) => {
+    // verify that the token has permissions to read the user
+    .flatMapLatest((params) => {
         return rx.Observable.create(function (o) {
-            const user = users.get(session.user_id);
 
-            if (!user) {
+            const user = users.get(params.req.params.user_id);
+            const sessionUser = userSessions.findUserBySessionId(params.session.id);
+
+
+            if (user.id !== sessionUser.id) {
                 throw new Error('Invalid token');
             }
 
@@ -32,6 +46,7 @@ module.exports = function (req) {
 
         });
     })
+
     .map((user) => {
         const json = _.omit(user, 'password', 'confirm');
         return JSON.stringify(json);

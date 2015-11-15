@@ -10,7 +10,7 @@ server(process.env.PORT || 4100, [{
     "handler": "./src/user/create"
 },{
     "method": "get",
-    "path": "/users/:id",
+    "path": "/users/:user_id",
     "handler": "./src/user/get"
 },{
     "method": "post",
