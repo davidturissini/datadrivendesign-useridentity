@@ -2,19 +2,17 @@
 
 const mongoose = require('mongoose');
 
-const User = mongoose.model('User', {
-    username: {
+const Role = mongoose.model('Role', {
+    name: {
+        type: String
+    },
+    slug: {
         type: String,
         required: true,
         index: {
             unique: true
         }
     },
-    password: {
-        type: String,
-        required: true
-    },
-    salt: String,
     domain: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Domain',
@@ -22,4 +20,4 @@ const User = mongoose.model('User', {
     }
 });
 
-module.exports = User;
+module.exports = Role;

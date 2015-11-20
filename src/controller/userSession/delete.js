@@ -1,8 +1,8 @@
 'use strict';
 
 const rx = require('rx');
-const userSessions = require('./../persistence/userSession');
-const user = require('./../persistence/users');
+const userSessions = require('./../../model/UserSession');
+const user = require('./../../model/User');
 
 module.exports = function (req) {
 

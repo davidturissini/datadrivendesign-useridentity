@@ -1,7 +1,7 @@
 'use strict';
 
-const users = require('./../persistence/users');
-const userSessions = require('./../persistence/userSession');
+const User = require('./../../model/User');
+const UserSession = require('./../../model/UserSession');
 const rx = require('rx');
 const _ = require('lodash');
 
@@ -13,14 +13,14 @@ module.exports = function (req) {
         const tokenString = req.headers['x-auth-token'];
 
         if (!tokenString) {
-            throw new Error('Token missing');
+            o.onError('Token missing');
         }
 
         
         const session = userSessions.get(tokenString);
 
         if (!session) {
-            throw new Error('Invalid token');
+            o.onError('Invalid token');
         }
 
         o.onNext({
@@ -39,7 +39,7 @@ module.exports = function (req) {
 
 
             if (user.id !== sessionUser.id) {
-                throw new Error('Invalid token');
+                o.onError('Invalid token');
             }
 
             o.onNext(user);

@@ -10,13 +10,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^0.8.5",
     "body-parser": "^1.14.1",
     "express": "^4.13.3",
     "lodash": "^3.10.1",
-    "mongoose": "^4.2.4",
+    "mongoose": "^4.2.6",
     "node-babel": "^0.1.2",
     "rx": "^4.0.6",
-    "uuid": "^2.0.1",
     "whirlpool": "https://github.com/davidturissini/whirlpool.git"
   }
 }
