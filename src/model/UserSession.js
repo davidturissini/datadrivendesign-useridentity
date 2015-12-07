@@ -7,9 +7,9 @@ const UserSession = mongoose.model('UserSession', {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
-    domain: {
+    app: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Domain',
+        ref: 'App',
         required: true
     }
 });

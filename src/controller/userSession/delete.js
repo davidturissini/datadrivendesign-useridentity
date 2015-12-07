@@ -1,25 +1,33 @@
 'use strict';
 
 const rx = require('rx');
-const userSessions = require('./../../model/UserSession');
-const user = require('./../../model/User');
+
+// Model
+const UserSession = require('./../../model/UserSession');
+
+// Action
+const userValidateUserSessionFromRequest = require('./../../action/user/validateUserSessionFromRequest');
+
 
 module.exports = function (req) {
+    const userSessionId = req.body.data.id;
 
-    return rx.Observable.return(req.body)
-        
-        // ensure user exists
-        .flatMapLatest((params) => {
-
+    return userValidateUserSessionFromRequest(req)
+        .flatMapLatest(() => {
             return rx.Observable.create(function (o) {
-                userSessions[params.id];
 
-                o.onNext(params);
+                UserSession.remove({
+                    _id: userSessionId
+                }, function (err, userSession) {
+                    if (err) {
+                        o.onError(err);
+                    }
+
+                    o.onNext({});
+                    o.onCompleted();
+                });
+
             });
 
-        })
-
-        .map((userSession) => {
-            return JSON.stringify({});
-        })
+        });
 }

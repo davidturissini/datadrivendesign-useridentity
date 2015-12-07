@@ -6,16 +6,15 @@ const User = require('./../../model/User');
 const UnauthorizedError = require('./../../error/Unauthorized');
 const bcrypt = require('bcrypt');
 
-module.exports = function (domain, params) {
+module.exports = function (app, params) {
 
     return rx.Observable.return(params)
         
         // ensure user exists
         .flatMapLatest((params) => {
-            console.log(params);
             return rx.Observable.create(function (o) {
                 User.findOne({
-                    domain: domain,
+                    app: app,
                     username: params.username
                 }, function (err, user) {
                     if (err) {
@@ -68,7 +67,7 @@ module.exports = function (domain, params) {
         .flatMapLatest(({ user, params }) => {
             return rx.Observable.create(function (o) {
                 UserSession.create({
-                    domain: domain,
+                    app: app,
                     user: user
                 }, function (err, userSession) {
                     if (err) {

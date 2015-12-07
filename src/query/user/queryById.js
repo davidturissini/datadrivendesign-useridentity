@@ -3,19 +3,20 @@
 const rx = require('rx');
 
 // Model
-const Domain = require('./../../model/Domain');
+const User = require('./../../model/User');
 
-module.exports = function (params) {
+module.exports = function (userId) {
 
     return rx.Observable.create(function (o) {
 
-        Domain.create(params, function (err, domain) {
+        User.findById(userId, function (err, user) {
             if (err) {
                 o.onError(err);
             }
 
-            o.onNext(domain);
+            o.onNext(user);
             o.onCompleted();
+
         })
 
     });

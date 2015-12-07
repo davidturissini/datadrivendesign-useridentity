@@ -5,118 +5,168 @@ const mongoose = require('mongoose');
 
 const rx = require('rx');
 const express = require('express');
+const cors = require('cors');
 const bodyParser = require('body-parser');
 const port = process.env.PORT || 4100;
-const domainId = '564e940cd8cb7c747829f119';
-const domainKey = '564aa7e623012238711bac64';
+const appId = '564e940cd8cb7c747829f119';
+const appKey = '564aa7e623012238711bac64'
+const crypto = require('crypto');
 
 // Model
-const Domain = require('./model/Domain');
-
+const App = require('./model/App');
 
 // Stream
-const domainFromRequestStream = require('./stream/domain/fromRequest');
+const appFromRequestStream = require('./stream/app/fromRequest');
 
 // Action
-const createDomainAction = require('./action/domain/create');
+const createAppAction = require('./action/app/create');
 
 mongoose.connect('mongodb://localhost/test');
 
 rx.Observable.create(function (o) {
-        Domain.findOne({
-            _id: domainId,
-            key: domainKey
-        }, function (err, domain) {
+        App.findOne({
+            _id: appId,
+            key: appKey
+        }, function (err, app) {
             if (err) {
                 o.onError(err);
             }
 
-            o.onNext(domain);
+            o.onNext(app);
             o.onCompleted();
         });
     })
 
-    .flatMapLatest((domain) => {
+    .flatMapLatest((app) => {
 
-        if (domain) {
-            return rx.Observable.return(domain);
+        if (app) {
+            return rx.Observable.return(app);
         }
 
-        return createDomainAction({
-            _id: domainId,
-            key: domainKey,
+        return createAppAction({
+            _id: appId,
+            key: appKey,
             name:'auth'
         });
     })
-    .map((domain) => {
-        const app = express();
+    .map((app) => {
+        const expressApp = express();
+
+        expressApp.use(function (req, res, next) {
+            const headers = req.headers;
+            const contentType = headers['Content-Type'];
+
+            if (!contentType) {
+                headers['Content-Type'] = 'application/json';
+            }
+
+            next();
+
+        });
 
         // parse application/json
-        app.use(bodyParser.json());
+        expressApp.use(bodyParser.json());
 
-        app.use(function(req, res, next) {
+        expressApp.use(function(req, res, next) {
           res.header("Access-Control-Allow-Origin", "*");
-          res.header("Access-Control-Allow-Headers", "x-domain-key, x-auth-token, Origin, X-Requested-With, Content-Type, Accept");
+          res.header("Access-Control-Allow-Headers", "x-user-session-id, x-domain-key, x-auth-token, Origin, X-Requested-With, Content-Type, Accept");
           next();
         });
 
-        return app;
+        expressApp.use(cors());
+
+        return expressApp;
 
     })
 
-    .flatMapLatest((app) => {
+    .flatMapLatest((expressApp) => {
 
         const routes = [{
             method: 'post',
-            path: '/users',
-            handler: require('./controller/user/create')
+            path: '/admins',
+            handler: require('./controller/admin/create')
         },{
             method: 'post',
-            path: '/userSession',
+            path: '/apps/:app_id/userSession',
             handler: require('./controller/userSession/create')
         },{
+            method: 'post',
+            path: '/apps/:app_id/users',
+            handler: require('./controller/app/createUser')
+        },{
             method: 'get',
-            path: '/domains/:domain_id/users/:user_id',
+            path: '/apps/:app_id/users/:user_id',
             handler: require('./controller/user/get')
         },{
             method: 'post',
-            path: '/domains/:domain_id/userSession',
-            handler: require('./controller/userSession/create')
+            path: '/apps/:app_id/users/:user_id/validateUserSession',
+            handler: require('./controller/user/validateUserSession')
         },{
             method: 'delete',
-            path: '/domains/:domain_id/userSession',
+            path: '/apps/:app_id/users/:user_id/destroyUserSession',
             handler: require('./controller/userSession/delete')
-        },{
-            method: 'post',
-            path: '/domains/:domain_id/users',
-            handler: require('./controller/domain/createUser')
         }];
 
         return rx.Observable.create(function (o) {
 
-            app.param('domain_id', function (req, res, next) {
-
-                domainFromRequestStream(req)
-                    .subscribe(function (domain) {
-                        if (!domain) {
-                            o.onNext({
-                                res:res,
-                                data: {
-                                    error: {
-                                        message: 'Invalid domain key'
-                                    }
-                                }
-                            });
-                        } else {
-                            next();
+            function handleError (res) {
+                o.onNext({
+                    data: {
+                        error: {
+                            message: 'Not authorized'
                         }
-                    });
-                
+                    },
+                    res: res
+                });
+            }
+
+            expressApp.use(function (req, res, next) {
+                const appId = req.params.app_id;
+                const authHeader = req.headers.authentication;
+
+                if (!authHeader) {
+                    handleError(res);
+                    return;
+                }
+
+                const authType = authHeader.split(' ')[0];
+                const authId = authHeader.split(' ')[1].split(':')[0];
+                const authHmac = authHeader.split(' ')[1].split(':')[1];
+
+                App.findById(authId, function (err, app) {
+                    if (err || !app) {
+                        handleError(res);
+
+                        return;
+                    }
+
+                    const secret = app.key;
+                    const body = JSON.stringify(req.body);
+                    const query = JSON.stringify(req.query);
+                    
+                    const str = (`${req.method}${req.path}${query}${body}`).toLowerCase();
+                    const hmac = crypto.createHmac("SHA256", secret).update(str).digest('base64');
+                    
+                    console.log('str', str);
+                    console.log('secret', secret);
+
+                    console.log('hmac', hmac);
+                    console.log('authHmac', authHmac);
+                    if (hmac !== authHmac) {
+                        console.log('handling error');
+                        handleError(res);
+                    } else {
+                        next();
+                    }
+
+                });
+
+
             });
 
             routes.forEach(function (data) {
 
-                app[data.method](data.path, function (req, res) {
+                expressApp[data.method](data.path, function (req, res) {
                     data.handler(req)
                         .subscribe(function (data) {
                             o.onNext({
@@ -126,11 +176,12 @@ rx.Observable.create(function (o) {
                                 res: res
                             });
                         }, function (error) {
+                            const errorMessage = error.message ? error.message : error;
 
                             o.onNext({
                                 data: {
                                     error: {
-                                        message: error
+                                        message: errorMessage
                                     }
                                 },
                                 res: res
@@ -141,8 +192,8 @@ rx.Observable.create(function (o) {
             
             });
 
-            app.listen(port);
-            console.log(`App listening on port ${port}`);
+            expressApp.listen(port);
+            console.log(`Server started on port ${port}`);
 
         });
 

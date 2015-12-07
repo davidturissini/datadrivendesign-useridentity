@@ -1,25 +1,8 @@
 'use strict';
 
 const mongoose = require('mongoose');
+const personSchema = require('./../schema/person');
 
-const User = mongoose.model('User', {
-    username: {
-        type: String,
-        required: true,
-        index: {
-            unique: true
-        }
-    },
-    password: {
-        type: String,
-        required: true
-    },
-    salt: String,
-    domain: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Domain',
-        required: true
-    }
-});
+const User = mongoose.model('User', personSchema);
 
 module.exports = User;
