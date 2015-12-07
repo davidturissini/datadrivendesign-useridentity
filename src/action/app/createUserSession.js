@@ -8,8 +8,8 @@ const bcrypt = require('bcrypt');
 
 module.exports = function (app, params) {
 
+        console.log('params', params);
     return rx.Observable.return(params)
-        
         // ensure user exists
         .flatMapLatest((params) => {
             return rx.Observable.create(function (o) {

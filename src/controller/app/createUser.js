@@ -120,7 +120,7 @@ module.exports = function (req) {
         })
         .map((user) => {
             const json = user.toJSON();
-            return _.omit(json, 'password', 'salt', '__v');
+            return _.omit(json, 'password', 'salt', '__v', 'app');
         });
     });
 
