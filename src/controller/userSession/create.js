@@ -8,6 +8,9 @@ const _ = require('lodash');
 const domainFromRequestStream = require('./../../stream/app/fromRequest');
 const domainCreateUserSessionAction = require('./../../action/app/createUserSession');
 
+// Formatters
+const userAttributesObjectFormatter = require('./../../formatters/user/userAttributesObject');
+
 module.exports = function (req) {
 
     const domainStream = domainFromRequestStream(req);
@@ -15,6 +18,20 @@ module.exports = function (req) {
 
     return domainStream.flatMapLatest((app) => {
         return domainCreateUserSessionAction(app, params);
+    })
+
+    .map((userSession) => {
+        const userAttributes = userAttributesObjectFormatter(userSession.user);
+        userAttributes.id = userSession.user._id;
+
+        return {
+            type: 'usersession',
+            id: userSession.get('id'),
+            relationships: {
+                user: userAttributes
+            }
+        }
+
     });
 
 }

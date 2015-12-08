@@ -79,14 +79,5 @@ module.exports = function (app, params) {
                 })
                 
             });
-        })
-
-        .map((userSession) => {
-            const json = userSession.toJSON();
-
-            return {
-                _id: json._id,
-                user_id: json.user._id
-            };
         });
 }
