@@ -27,7 +27,8 @@ module.exports = function (req) {
 
     .map((user) => {
         const object = user.toObject();
-        return _.omit(object, 'password', 'confirm', 'salt', 'app', '__v');
+        object.id = object._id;
+        return _.omit(object, 'password', 'confirm', 'salt', 'app', '__v', '_id');
     });
 
 
