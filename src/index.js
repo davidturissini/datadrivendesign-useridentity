@@ -21,7 +21,10 @@ const appFromRequestStream = require('./stream/app/fromRequest');
 // Action
 const createAppAction = require('./action/app/create');
 
-mongoose.connect('mongodb://localhost/test');
+
+const dbhost = process.env.USER_MONGO_HOST;
+const db = process.env.USER_MONGO_DB;
+mongoose.connect(`mongodb://${dbhost}/${db}`);
 
 rx.Observable.create(function (o) {
         App.findOne({
@@ -143,10 +146,10 @@ rx.Observable.create(function (o) {
                     const secret = app.key;
                     const body = JSON.stringify(req.body);
                     const query = JSON.stringify(req.query);
-                    
+
                     const str = (`${req.method}${req.path}${query}${body}`).toLowerCase();
                     const hmac = crypto.createHmac("SHA256", secret).update(str).digest('base64');
-                    
+
                     console.log('str', str);
                     console.log('secret', secret);
 
@@ -189,7 +192,7 @@ rx.Observable.create(function (o) {
                         })
                 });
 
-            
+
             });
 
             expressApp.listen(port);
