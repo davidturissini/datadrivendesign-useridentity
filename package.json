@@ -4,7 +4,7 @@
   "description": "User management services for data driven design",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "forever start --spinSleepTime 10000 src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
